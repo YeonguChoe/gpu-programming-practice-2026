@@ -29,8 +29,46 @@ def reverse(read_ptr, write_ptr, total_data, BLOCK_SIZE: tl.constexpr):
 
 ## Matrix Vector Multiplication
 
+$$
+\begin{bmatrix}
+1 & 2 & 3 & 4 \\
+5 & 6 & 7 & 8 \\
+9 & 10 & 11 & 12
+\end{bmatrix}
+\begin{bmatrix}
+1 \\
+2 \\
+3 \\
+4
+\end{bmatrix}
+=
+\begin{bmatrix}
+30 \\
+70 \\
+110
+\end{bmatrix}
+$$
+
+```python
+@triton.jit
+def matrix_vector_mutiply(matrix_ptr, vector_ptr, output_ptr, BLOCK_SIZE: tl.constexpr):
+    row_pid = tl.program_id(0)
+    columns_vector = tl.arange(0, BLOCK_SIZE)
+    matrix_offsets = row_pid * BLOCK_SIZE + columns_vector
+    vector_offsets = columns_vector
+    mask = columns_vector < BLOCK_SIZE
+    row_from_matrix = tl.load(matrix_ptr + matrix_offsets, mask=mask)
+    column_from_vector = tl.load(vector_ptr + vector_offsets, mask=mask)
+    multiplied_vector = row_from_matrix * column_from_vector
+    sum = tl.sum(multiplied_vector)
+    tl.store(output_ptr + row_pid, sum)
+```
 
 ## Matrix Multiplication
+
+```python
+
+```
 
 
 ## Matrix Transpose
