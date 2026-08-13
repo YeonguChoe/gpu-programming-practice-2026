@@ -29,26 +29,6 @@ def reverse(read_ptr, write_ptr, total_data, BLOCK_SIZE: tl.constexpr):
 
 ## Matrix Vector Multiplication
 
-$$
-\begin{bmatrix}
-1 & 2 & 3 & 4 \\
-5 & 6 & 7 & 8 \\
-9 & 10 & 11 & 12
-\end{bmatrix}
-\begin{bmatrix}
-1 \\
-2 \\
-3 \\
-4
-\end{bmatrix}
-=
-\begin{bmatrix}
-30 \\
-70 \\
-110
-\end{bmatrix}
-$$
-
 ```python
 @triton.jit
 def matrix_vector_mutiply(matrix_ptr, vector_ptr, output_ptr, BLOCK_SIZE: tl.constexpr):
