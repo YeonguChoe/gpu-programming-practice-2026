@@ -1,5 +1,9 @@
 # GPU Programming Practice
 
+## Grid Dimesion
+
+
+
 ## Add two 1D vectors
 
 ```python
@@ -46,13 +50,46 @@ def matrix_vector_mutiply(matrix_ptr, vector_ptr, output_ptr, BLOCK_SIZE: tl.con
 
 ## Matrix Multiplication
 
-```python
+<image src="matrix-multiplication.png">
 
+```python
+@triton.jit
+def matrix_multiplication(
+    a_ptr,
+    b_ptr,
+    c_ptr,
+    M,
+    K: tl.constexpr,  # Because K is used by tl.arange
+    N,
+    BLOCK_SIZE_M: tl.constexpr,
+    BLOCK_SIZE_N: tl.constexpr,
+):
+    pid_0 = tl.program_id(0)
+    pid_1 = tl.program_id(1)
+
+    block_m_indice = pid_0 * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M)
+    block_n_indice = pid_1 * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N)
+    b_row_indice = tl.arange(0, K)
+
+    # Thinking in point
+    # A(m, k): a_ptr + m * K + k
+    a_ptrs = a_ptr + block_m_indice[:, None] * K + b_row_indice[None, :]
+
+    # Thinking in point
+    # B(k, n): b_ptr + k * N + n
+    b_ptrs = b_ptr + b_row_indice[:, None] * N + block_n_indice[None, :]
+
+    a_mask = block_m_indice[:, None] < M
+    b_mask = block_n_indice[None, :] < N
+    c_mask = (block_m_indice[:, None] < M) & (block_n_indice[None, :] < N)
+
+    a = tl.load(a_ptrs, mask=a_mask, other=0.0)
+    b = tl.load(b_ptrs, mask=b_mask, other=0.0)
+    c = tl.dot(a, b)
+
+    # Thinking in point
+    # C(m, n): output_ptr + m * N + n
+    c_ptrs = c_ptr + block_m_indice[:, None] * N + block_n_indice[None, :]
+    tl.store(c_ptrs, c, mask=c_mask)
 ```
 
-
-## Matrix Transpose
-
-## Dot Product
-
-## Cross Product
